@@ -1,20 +1,22 @@
 SRC = source
 TEMP = temp
 
+INPUT_FILES = ${SRC}/kernel/kernel.cpp ${SRC}/kernel/vga.cpp
+
 all: build clean run
 
 mbr.bin: ${SRC}/MBR/mbr.asm
 	nasm -f bin $^ -o ${TEMP}/$@
 
-build: mbr.bin kernel.o kentry.o kernel.bin os.bin os.img
+build: mbr.bin kentry.o kernel.o kernel.bin os.bin os.img
 
-kernel.o: ${SRC}/kernel/kernel.c
-	gcc -m32 -ffreestanding -fno-pie -c $^ -o ${TEMP}/$@
+kernel.o: ${INPUT_FILES}
+	perl gcc-wrap -c ${INPUT_FILES} --outdir="${TEMP}"
 
 kentry.o: ${SRC}/kernel/entry.asm
 	nasm $^ -f elf -o ${TEMP}/$@
 
-kernel.bin: ${TEMP}/kentry.o ${TEMP}/kernel.o
+kernel.bin: ${TEMP}/kentry.o ${TEMP}/kernel.o  ${TEMP}/vga.o
 	ld -m elf_i386 -o ${TEMP}/$@ -Ttext 0x1000 $^ --oformat binary
 
 os.bin: ${TEMP}/mbr.bin ${TEMP}/kernel.bin
@@ -28,4 +30,4 @@ run: os.img
 	qemu-system-i386 -fda $^
 
 clean:
-	rm -rf build/*
+	rm -rf ${TEMP}/*
