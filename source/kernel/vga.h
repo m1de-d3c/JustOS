@@ -1,20 +1,12 @@
 #ifndef __JOS_VGA_H__
 #define __JOS_VGA_H__
 
-#include <stdint.h>
+#include "util.h"
 
-#define VMEMCHR(w, h) *((char*) 0xB8000 + (2 * (h * 80 + w)))
-#define VMEMCOLOR(w, h) *((char*) 0xB8000 + (2 * (h * 80 + w + 1)))
+#define VGAMODE_W320_H200_C256 (1<<1)
+#define VGAMODE_W720_H480_C16 (1<<2)
+#define VGAMODE_TEXT_W80_H25 (1<<3)
 
-namespace VGA {
-    struct Rect {
-        int width, height;
-    };
-
-    void set_char(VGA::Rect pos, char chr);
-    uint16_t get_char(VGA::Rect pos);
-
-    void clear_buffer();
-}
+void init_vga(uint32_t options);
 
 #endif

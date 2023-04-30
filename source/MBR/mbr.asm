@@ -1,7 +1,8 @@
 [bits 16]
 [org 0x7C00]
 
-%define halt jmp $
+%define halt            jmp $
+%define KERNEL_OFFSET   0x7E00
 
 ; saving disk number
 mov [BOOT_DISK], dl
@@ -11,46 +12,41 @@ xor ax, ax
 mov ds, ax
 
 ; setup stack
-mov bp, 0x9000
+mov bp, 0x7E00
 mov sp, bp
 
-; read next 64 sectors in 0x7E00
-mov ah, 0x02
-mov al, 0x40
-mov ch, 0x00
-mov cl, 0x02
-mov dh, 0x00
-mov dl, [BOOT_DISK]
-mov bx, 0x7E00
-int 13h
-jnc no_disk_error
-; disk error
-push disk_error_msg
-call println
-shr ax, 8
-push ax
-call printhex
-halt
-; message to print on disk error
-disk_error_msg: db 'DISK ERROR ', 0x00
-no_disk_error:  ; no disk error branch
+mov ah, 0x00
+mov al, 0x13
+int 10h
+
+; read next 64 sectors in KERNEL_OFFSET
+push 0x0002
+push 0x0002
+call disk_read
+add sp, 4
 
 ; make dummy check about existence of a kernel
-cmp BYTE [0x7E00], 0xE8
+cmp WORD [KERNEL_OFFSET], 0x18AA
 jz pass_check
-; no kernel at 0x7E00
+; no kernel at KERNEL_OFFSET
 push no_kernel_msg
 call println
+add sp, 2
 halt
 ; message to print on kernel-not-exists error
 no_kernel_msg: db 'NO KERNEL EXISTS, CANNOT LOAD', 0x00
 pass_check:
 
+push WORD [KERNEL_OFFSET + 2]
+push 0x0002
+call disk_read
+add sp, 4
+
 ; switch to protected (32 bit) mode
 cli
 lgdt [gdt_desc]
 mov eax, cr0
-or eax, 0x0001
+or eax, 0x01
 mov cr0, eax
 jmp CODE_SEG:init_32bit
 
@@ -70,15 +66,47 @@ init_32bit:
     mov esp, ebp
 
     ; jump to kernel
-    jmp 0x7E00
+    xor eax, eax
+    mov ax, [0x7E04]
+    add ax, KERNEL_OFFSET
+    jmp eax
     halt
 
-halt
-
 [bits 16]
-; void print(void* msg)
+; int disk_read(int starting_sector, int sectors_count)
+disk_read:
+    mov cl, [esp + 2]
+    mov al, [esp + 4]
+    mov ah, 0x02
+    mov ch, 0x00
+    mov dh, 0x00
+    mov dl, [BOOT_DISK]
+push ax
+    xor ax, ax
+    mov es, ax
+pop ax
+    mov bx, KERNEL_OFFSET
+    int 13h
+    jnc no_disk_error
+; disk error
+push ax
+    push disk_error_msg
+    call println
+    add sp, 2
+pop ax
+    shr ax, 8
+    push ax
+    call printhex
+    add sp, 2
+    halt
+; message to print on disk error
+disk_error_msg: db 'DISK ERROR ', 0x00
+no_disk_error:  ; no disk error branch
+    ret
+
+; void println(void* msg)
 println:
-    mov si, [bp - 2]
+    mov si, [esp + 2]
 
     xor bh, bh
     mov ah, 0x0E
@@ -96,7 +124,7 @@ println_ret:
 
 ; void printhex(uint8 num)
 printhex:
-    mov bl, [bp - 4]
+    mov bl, [esp + 2]
 
     xor bh, bh
     mov ah, 0x0E
@@ -122,18 +150,18 @@ gdt_start:
 gdt_code:
     dw 0xffff
     dw 0x0000
-    db 0x00
+    db 0b00000000
     db 0b10011010
     db 0b11001111
-    db 0x00
+    db 0b00000000
 
 gdt_data:
     dw 0xffff
     dw 0x0000
-    db 0x00
+    db 0b00000000
     db 0b10010010
     db 0b11001111
-    db 0x00
+    db 0b00000000
 
 gdt_end:
 
