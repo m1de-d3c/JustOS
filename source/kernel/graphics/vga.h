@@ -1,7 +1,7 @@
 #ifndef __JOS_VGA_H__
 #define __JOS_VGA_H__
 
-#include "util.h"
+#include <util.h>
 
 #define VGAMODE_W320_H200_C256 (1<<1)
 #define VGAMODE_W720_H480_C16 (1<<2)

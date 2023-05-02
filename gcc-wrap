@@ -7,6 +7,7 @@ Getopt::Long::Configure(pass_through);
 
 my $GCC = "g++";
 my $outdir = ".";
+my $argv = "-gdwarf -m32 -ffreestanding -fno-pie -Isource/kernel";
 GetOptions("outdir=s" => \$outdir)
     or die("Options error");
 
@@ -19,7 +20,7 @@ die("No input files") if(scalar @c_files == 0);
 foreach my $c_file (reverse @c_files){
     my($filename, $c_path, $suffix) = fileparse(fileparse($c_file, ".cpp"), ".c");
     my $o_file = File::Spec->catfile($outdir, "$filename.o");
-    my $cmd = "$GCC -gdwarf -m32 -ffreestanding -fno-pie -o $o_file @ARGV $c_file";
+    my $cmd = "$GCC $argv -o $o_file @ARGV $c_file";
     print STDERR "$cmd\n";
     system($cmd) == 0 or die("Could not execute $cmd: $!");
 }

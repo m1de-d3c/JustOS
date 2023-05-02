@@ -15,12 +15,8 @@ mov ds, ax
 mov bp, 0x7E00
 mov sp, bp
 
-mov ah, 0x00
-mov al, 0x13
-int 10h
-
-; read next 64 sectors in KERNEL_OFFSET
-push 0x0002
+; read first sector of the kernel
+push 0x0001
 push 0x0002
 call disk_read
 add sp, 4
@@ -37,6 +33,7 @@ halt
 no_kernel_msg: db 'NO KERNEL EXISTS, CANNOT LOAD', 0x00
 pass_check:
 
+; read rest (up to 0x40 sectors) of the kernel
 push WORD [KERNEL_OFFSET + 2]
 push 0x0002
 call disk_read
@@ -48,6 +45,7 @@ lgdt [gdt_desc]
 mov eax, cr0
 or eax, 0x01
 mov cr0, eax
+; jump to protected mode initizlization
 jmp CODE_SEG:init_32bit
 
 ; initialize protected mode and pass controll to kernel

@@ -1,12 +1,13 @@
 SRC = source
 TEMP = temp
 
-SOURCE_FILES = ${SRC}/kernel/kernel.cpp ${SRC}/kernel/util.c ${SRC}/kernel/vga.c
-OBJECT_FILES = ${TEMP}/kentry.o ${TEMP}/kernel.o ${TEMP}/util.o ${TEMP}/vga.o
+SOURCE_FILES = ${SRC}/kernel/kernel.cpp ${SRC}/kernel/util.c ${SRC}/kernel/graphics/vga.c ${SRC}/kernel/interrupts/idt.c ${SRC}/kernel/interrupts/isr.c
+OBJECT_FILES = ${TEMP}/kentry.o ${TEMP}/kernel.o ${TEMP}/util.o ${TEMP}/vga.o ${TEMP}/idt.o ${TEMP}/isr.o
 
 $(shell mkdir -p temp)
 $(shell rm -rf temp/*.o)
 $(shell rm -rf temp/*.bin)
+$(shell rm -rf temp/*.elf)
 
 all: build clean run
 
@@ -36,10 +37,10 @@ os.img: ${TEMP}/os.bin
 	dd if=$^ of=$@ conv=notrunc
 
 run: os.img
-	qemu-system-x86_64 -fda $^
+	qemu-system-i386 -fda $^
 
 debug-run: build os.img kernel-debug-info.elf
-	qemu-system-x86_64 -s -S -fda os.img -d guest_errors,int &
+	qemu-system-i386 -s -S -fda os.img -d guest_errors,int &
 	gdb -ex "target remote localhost:1234" -ex "symbol-file ${TEMP}/kernel-debug-info.elf"
 	rm -rf ${TEMP}/*.elf
 
