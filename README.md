@@ -1,5 +1,18 @@
 # JustOS
 JustOS - small operating system written completely from scratch, including Bootloader.
 
-# Building from source
-`git clone `
+## Installing build tools/emulator
+* `make install` (Linux only)
+
+## Build from source
+### Linux
+* `git clone https://github.com/m1de-d3c/JustOS.git`
+* `make build clean`
+### Windows / Mac
+* No idea
+
+## Running
+### Simple run
+* `make run`
+### Rebuild and run
+* `make` (alias to `make build clean run`)
