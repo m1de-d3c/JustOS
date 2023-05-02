@@ -16,3 +16,5 @@ JustOS - small operating system written completely from scratch, including Bootl
 * `make run`
 ### Rebuild and run
 * `make` (alias to `make build clean run`)
+
+## Made with help of osdev.org and OSDev tutorial by Frank Rosner (https://dev.to/frosnerd/writing-my-own-boot-loader-3mld)
