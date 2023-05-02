@@ -2,7 +2,7 @@
 JustOS - small operating system written completely from scratch, including Bootloader.
 
 ## Installing build tools/emulator
-* `make install` (Linux only)
+* `make install` (Debian-based Linux only)
 
 ## Build from source
 ### Linux
